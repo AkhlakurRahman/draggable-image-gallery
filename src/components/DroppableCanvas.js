@@ -4,14 +4,12 @@ import { useDrop } from 'react-dnd';
 import { ItemTypes } from '../utils/item';
 import DroppedItems from './DroppedItems';
 
-const DroppablePanel = ({ images }) => {
-  const [selectedImage, setSelectedImage] = useState([]);
-
+const DroppableCanvas = ({ images }) => {
   const fromLocal = JSON.parse(localStorage.getItem('droppedImages')) || [];
+  const [selectedImage, setSelectedImage] = useState(fromLocal);
 
-  const putInsidePanel = (id) => {
+  const putInsideCanvas = (id) => {
     const data = images.filter((image) => image.char_id === id);
-    data[0].insidePanel = true;
     setSelectedImage((prevState) => {
       let filteredData = [];
       if (fromLocal) {
@@ -28,9 +26,17 @@ const DroppablePanel = ({ images }) => {
     });
   };
 
+  const removeImageFromCanvas = (id) => {
+    const imagesAfterDeletion = fromLocal.filter((fl) => fl.char_id !== id);
+
+    localStorage.setItem('droppedImages', JSON.stringify(imagesAfterDeletion));
+
+    setSelectedImage(imagesAfterDeletion);
+  };
+
   const [{ isOver }, drop] = useDrop({
     accept: ItemTypes.IMAGE,
-    drop: (item, monitor) => putInsidePanel(item.id),
+    drop: (item, monitor) => putInsideCanvas(item.id),
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
@@ -58,10 +64,18 @@ const DroppablePanel = ({ images }) => {
           </div>
         )}
 
-        <DroppedItems items={fromLocal} />
+        <div className='dropped-items'>
+          {selectedImage?.map((item, index) => (
+            <DroppedItems
+              key={index}
+              item={item}
+              removeImageFromCanvas={removeImageFromCanvas}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
 };
 
-export default DroppablePanel;
+export default DroppableCanvas;
